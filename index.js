@@ -1,6 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-// import express from 'express';
+import express from 'express';
+import cors from 'cors';
+import batata, { multiplicacao } from './teste.js';
+
 const port = 3000;
 const app = express();
 
@@ -14,4 +15,6 @@ app.get('/', function (req, res) {
 
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
+  console.log(`A soma é: `, batata(3, 6));
+  console.log(multiplicacao(3, 6));
 });
