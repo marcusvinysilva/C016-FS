@@ -1,6 +1,8 @@
+const { v4: uuidv4 } = require('uuid');
+
 const paletas = [
   {
-    id: 1,
+    id: '3',
     sabor: 'Açaí com Leite Condensado',
     descricao:
       'Quam vulputate dignissim suspendisse in est ante in nibh mauris.',
@@ -8,7 +10,7 @@ const paletas = [
     preco: 10.0,
   },
   {
-    id: 2,
+    id: '2',
     sabor: 'Banana com Nutella',
     descricao:
       'Quam vulputate dignissim suspendisse in est ante in nibh mauris.',
@@ -16,7 +18,7 @@ const paletas = [
     preco: 10.0,
   },
   {
-    id: 3,
+    id: '1',
     sabor: 'Chocolate Belga',
     descricao:
       'Quam vulputate dignissim suspendisse in est ante in nibh mauris.',
@@ -28,26 +30,30 @@ const paletas = [
 const findAllPaletas = () => paletas;
 
 const findPaletaById = (id) => {
-  const paletaById = paletas.map((paleta) => {
+  let indice = 0;
+  const paletaById = paletas.map((paleta, index) => {
     if (paleta.id === id) {
+      indice = index;
       return paleta;
     }
   });
-  console.log(paletaById);
-  return paletaById[0];
+  return paletaById[indice];
 };
 
 const createPaleta = (paleta) => {
+  paleta.id = uuidv4();
   paletas.push(paleta);
   return paletas;
 };
 
 const updatePaleta = (id, updatedPaleta) => {
-  paletas.forEach((paleta) => {
+  paletas.forEach((paleta, index) => {
     if (paleta.id === id) {
-      paleta = updatedPaleta;
+      updatedPaleta.id = id;
+      paletas[index] = updatedPaleta;
     }
   });
+
   return paletas;
 };
 
@@ -57,6 +63,7 @@ const deletePaleta = (id) => {
       paletas.splice(index, 1);
     }
   });
+  numberOfObjects--;
 };
 
 const initialService = () => {
@@ -69,5 +76,5 @@ module.exports = {
   findPaletaById,
   createPaleta,
   deletePaleta,
-  updatePaleta
+  updatePaleta,
 };

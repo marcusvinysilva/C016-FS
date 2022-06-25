@@ -14,25 +14,41 @@ const findAllPaletas = (req, res) => {
 };
 
 const findPaletaById = (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
+
   const response = paletasService.findPaletaById(id);
   if (response === undefined) {
     res.status(204).send({ message: 'Nenhuma paleta encontrada' });
   } else {
-    res.send({ message: 'Paleta encontrada com sucesso', response });
+    res.send({ message: 'Paleta encontrada com sucesso', data: response });
   }
 };
 
 const createPaleta = (req, res) => {
   const paleta = req.body;
+  if (
+    paleta.descricao === '' ||
+    paleta.sabor === '' ||
+    paleta.preco === '' ||
+    paleta.foto === ''
+  ) {
+    res.status(400).send({ message: 'Dados da paleta incompletos' });
+  }
   const response = paletasService.createPaleta(paleta);
-  res.send(response);
+  res
+    .status(201)
+    .send({ message: 'Paleta criada com sucesso', data: response });
 };
 
 const updatePaleta = (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
   const updatedPaleta = req.body;
-  res.send(paletasService.updatePaleta(id, updatedPaleta));
+  const response = paletasService.updatePaleta(id, updatedPaleta);
+  if (response !== undefined) {
+    res.send({ message: 'Paleta Atualizada com sucesso', data: response });
+  } else {
+    res.send({ message: 'Nenhuma paleta foi encontrada' });
+  }
 };
 
 const deletePaleta = (req, res) => {
