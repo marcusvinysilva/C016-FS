@@ -63,7 +63,7 @@ const deletePaleta = (id) => {
       paletas.splice(index, 1);
     }
   });
-  numberOfObjects--;
+
 };
 
 const initialService = () => {
