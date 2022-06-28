@@ -1,3 +1,4 @@
+const e = require('cors');
 const { v4: uuidv4 } = require('uuid');
 
 const paletas = [
@@ -27,6 +28,9 @@ const paletas = [
   },
 ];
 
+// DRY = Dont Repeat Yourself;
+// KISS = Keep It Simple and Stupid;
+
 const findAllPaletas = () => paletas;
 
 const findPaletaById = (id) => {
@@ -47,14 +51,33 @@ const createPaleta = (paleta) => {
 };
 
 const updatePaleta = (id, updatedPaleta) => {
+  console.log(updatedPaleta);
+  let validPaletaId = false;
   paletas.forEach((paleta, index) => {
     if (paleta.id === id) {
-      updatedPaleta.id = id;
-      paletas[index] = updatedPaleta;
+      validPaletaId = true;
+      if (updatedPaleta.sabor) {
+        paletas[index].sabor = updatedPaleta.sabor;
+      }
+
+      if (updatedPaleta.descricao) {
+        paletas[index].descricao = updatedPaleta.descricao;
+      }
+
+      paletas[index].foto = updatedPaleta.foto
+        ? updatedPaleta.foto
+        : paletas[index].foto;
+
+      paletas[index].preco = updatedPaleta.preco
+        ? updatedPaleta.preco
+        : paletas[index].preco;
     }
   });
-
-  return paletas;
+  if (validPaletaId) {
+    return paletas;
+  } else {
+    throw new Error('Nenhuma paleta foi encontrada');
+  }
 };
 
 const deletePaleta = (id) => {
@@ -63,7 +86,6 @@ const deletePaleta = (id) => {
       paletas.splice(index, 1);
     }
   });
-
 };
 
 const initialService = () => {

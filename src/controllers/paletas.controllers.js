@@ -1,4 +1,5 @@
 const paletasService = require('../service/paletas.services');
+const validationService = require('../service/validation.services');
 
 const initialController = (req, res) => {
   console.log(req.headers['user-agent']);
@@ -15,46 +16,59 @@ const findAllPaletas = (req, res) => {
 
 const findPaletaById = (req, res) => {
   const id = req.params.id;
-
   const response = paletasService.findPaletaById(id);
   if (response === undefined) {
-    res.status(204).send({ message: 'Nenhuma paleta encontrada' });
+    res.status(206).send({ message: 'Nenhuma paleta encontrada' });
   } else {
-    res.send({ message: 'Paleta encontrada com sucesso', data: response });
+    res
+      .status(200)
+      .send({ message: 'Paleta encontrada com sucesso', data: response });
   }
 };
 
 const createPaleta = (req, res) => {
   const paleta = req.body;
-  if (
-    paleta.descricao === '' ||
-    paleta.sabor === '' ||
-    paleta.preco === '' ||
-    paleta.foto === ''
-  ) {
-    res.status(400).send({ message: 'Dados da paleta incompletos' });
+  const validPaleta = validationService.validPaleta(paleta);
+  if (validPaleta) {
+    const response = paletasService.createPaleta(paleta);
+    res
+      .status(201)
+      .send({ message: 'Paleta criada com sucesso', data: response });
+  } else {
+    res
+      .status(400)
+      .send({ message: 'Por favor preencha todos os campos da paleta' });
   }
-  const response = paletasService.createPaleta(paleta);
-  res
-    .status(201)
-    .send({ message: 'Paleta criada com sucesso', data: response });
 };
 
 const updatePaleta = (req, res) => {
-  const id = req.params.id;
-  const updatedPaleta = req.body;
-  const response = paletasService.updatePaleta(id, updatedPaleta);
-  if (response !== undefined) {
-    res.send({ message: 'Paleta Atualizada com sucesso', data: response });
-  } else {
-    res.send({ message: 'Nenhuma paleta foi encontrada' });
+  try {
+    const id = req.params.id;
+    const updatedPaleta = req.body;
+
+    validationService.validUpdatePaleta(updatedPaleta);
+    const response = paletasService.updatePaleta(id, updatedPaleta);
+    if (response !== undefined) {
+      res
+        .status(200)
+        .send({ message: 'Paleta Atualizada com sucesso', data: response });
+    }
+  } catch (err) {
+    console.log(err.message);
+    if (err.message == 'Nenhum dado para ser atualizado') {
+      res.status(400).send({ message: 'Nenhum dado foi enviado' });
+    } else if (err.message == 'Nenhuma paleta foi encontrada') {
+      res
+        .status(400)
+        .send({ message: 'Nenhuma paleta com esse id foi encontrada' });
+    }
   }
 };
 
 const deletePaleta = (req, res) => {
   const id = parseInt(req.params.id);
   const response = paletasService.deletePaleta(id);
-  res.send(response);
+  res.status(200).send(response);
 };
 
 // use the imagination
