@@ -1,5 +1,6 @@
 const paletasService = require('../service/paletas.services');
 const validationService = require('../service/validation.services');
+const mongoose = require('mongoose');
 
 const initialController = (req, res) => {
   console.log(req.headers['user-agent']);
@@ -10,14 +11,28 @@ const initialController = (req, res) => {
   res.send(response);
 };
 
-const findAllPaletas = (req, res) => {
-  res.send(paletasService.findAllPaletas());
+const findAllPaletas = async (req, res) => {
+  const allPaletas = await paletasService.findAllPaletas();
+
+  if (allPaletas.length == 0) {
+    return res
+      .status(206)
+      .send({ message: 'Não existe nenhuma paleta cadastrada!' });
+  }
+
+  res.send(allPaletas);
 };
 
-const findPaletaById = (req, res) => {
+const findPaletaById = async (req, res) => {
   const id = req.params.id;
-  const response = paletasService.findPaletaById(id);
-  if (response === undefined) {
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).send({ message: 'ID inválido!' });
+  }
+
+  const response = await paletasService.findPaletaById(id);
+  
+  if (!response) {
     res.status(206).send({ message: 'Nenhuma paleta encontrada' });
   } else {
     res
@@ -26,66 +41,75 @@ const findPaletaById = (req, res) => {
   }
 };
 
-const createPaleta = (req, res) => {
+const createPaleta = async (req, res) => {
   const paleta = req.body;
-  const validPaleta = validationService.validPaleta(paleta);
-  if (validPaleta) {
-    const response = paletasService.createPaleta(paleta);
-    res
-      .status(201)
-      .send({ message: 'Paleta criada com sucesso', data: response });
-  } else {
-    res
-      .status(400)
-      .send({ message: 'Por favor preencha todos os campos da paleta' });
+
+  if (
+    !paleta ||
+    !paleta.sabor ||
+    !paleta.descricao ||
+    !paleta.foto ||
+    !paleta.preco
+  ) {
+    return res.status(400).send({
+      message:
+        'Você não preencheu todos os dados para adicionar uma nova paleta ao cardápio!',
+    });
   }
+
+  const newPaleta = await paletasService.createPaleta(paleta);
+
+  res.send(newPaleta);
 };
 
-const updatePaleta = (req, res) => {
-  try {
-    const id = req.params.id;
-    const updatedPaleta = req.body;
+const updatePaleta = async (req, res) => {
+  const id = req.params.id;
+  const paletaEdit = req.body;
 
-    validationService.validUpdatePaleta(updatedPaleta);
-    const response = paletasService.updatePaleta(id, updatedPaleta);
-    if (response !== undefined) {
-      res
-        .status(200)
-        .send({ message: 'Paleta Atualizada com sucesso', data: response });
-    }
-  } catch (err) {
-    console.log(err.message);
-    if (err.message == 'Nenhum dado para ser atualizado') {
-      res.status(400).send({ message: 'Nenhum dado foi enviado' });
-    } else if (err.message == 'Nenhuma paleta foi encontrada') {
-      res
-        .status(400)
-        .send({ message: 'Nenhuma paleta com esse id foi encontrada' });
-    }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).send({ message: 'ID inválido!' });
   }
+
+  const chosenPaleta = await paletasService.findPaletaById(id);
+
+  if (!chosenPaleta) {
+    return res.status(206).send({ message: 'Paleta não encontrada!' });
+  }
+
+  if (
+    !paletaEdit ||
+    !paletaEdit.sabor ||
+    !paletaEdit.descricao ||
+    !paletaEdit.foto ||
+    !paletaEdit.preco
+  ) {
+    return res.status(400).send({
+      message: 'Você não preencheu todos os dados para editar a paleta!',
+    });
+  }
+
+  const updatedPaleta = await paletasService.updatePaleta(id, paletaEdit);
+
+  res.send(updatedPaleta);
 };
 
-const deletePaleta = (req, res) => {
-  const id = parseInt(req.params.id);
-  const response = paletasService.deletePaleta(id);
-  res.status(200).send(response);
-};
+const deletePaleta = async (req, res) => {
+  const id = req.params.id;
 
-// use the imagination
-// function checkouPurchase(req, res) {
-//   const user = user.service.findById(2342);
-//   if (user != null) {
-//     const authorization = auth.service.verification(user.card);
-//     if (authorization) {
-//       checkout.service.purchase(user, card);
-//       res.send('sucesso');
-//     } else {
-//       res.send('not authorized');
-//     }
-//   } else {
-//     res.sen('user not found');
-//   }
-// }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).send({ message: 'ID inválido!' });
+  }
+
+  const chosenPaleta = await paletasService.findPaletaById(id);
+
+  if (!chosenPaleta) {
+    return res.status(206).send({ message: 'Paleta não encontrada!' });
+  }
+
+  await paletasService.deletePaleta(id);
+
+  res.status(204).send();
+};
 
 module.exports = {
   initialController,
